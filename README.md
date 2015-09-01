@@ -3,12 +3,12 @@ A protein folding algorithm that maximizes entropy associated with water--e.g., 
 
 Requires:
 
-ECSPY (for PSO)
-PyRosetta (if you want to use it for getting sequence from PDB, which you don't)
-Biopython
-Pybel
-PeptideBuilder
-Numpy
+ECSPY (for PSO),
+PyRosetta (if you want to use it for getting sequence from PDB, which you don't),
+Biopython,
+Pybel,
+PeptideBuilder,
+Numpy,
 MSMS (executables)
 
 Sorry.
