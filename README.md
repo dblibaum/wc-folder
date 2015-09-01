@@ -7,7 +7,7 @@ ECSPY (for PSO),
 PyRosetta (if you want to use it for getting sequence from PDB, which you don't),
 Biopython,
 Pybel,
-PeptideBuilder,
+PeptideBuilder (https://peerj.com/articles/80/),
 Numpy,
 MSMS (executables)
 
