@@ -14,7 +14,7 @@ import math
 
 class MonteCarlo:
 
-    def __init__(self, pdb, mc_temperature=1, identifier=0, local=True):
+    def __init__(self, pdb, mc_temperature=1, identifier=0, local=True, path=""):
         """
         :param pdb: PDB id of protein to be folded.
         :param mc_temperature: Temperature for MC simulation.
@@ -41,6 +41,7 @@ class MonteCarlo:
         self.rot_mover_size = 5                           # Size of rotamer mover
         self.new_conf = False                             # Switch to build with new rotamer conformations
         self.mod_dict = {}                                # Dicitonary of modified rotamers
+        self.path = path                                  # Path to directory to operate in
 
         # Rosetta inits
         # This has ended up only using rosetta for getting the sequence from pdb, which is of course not necessary
@@ -96,22 +97,22 @@ class MonteCarlo:
 
         out = Bio.PDB.PDBIO()
         out.set_structure(structure)
-        out.save("/home/dan/solus/solus_design/PyRosetta/msms/prot" + str(self.id) + ".pdb")
+        out.save(self.path + "/msms/prot" + str(self.id) + ".pdb")
 
-        mol = pybel.readfile("pdb", "/home/dan/solus/solus_design/PyRosetta/msms/prot" + str(self.id) + ".pdb").next()
+        mol = pybel.readfile("pdb", self.path + "/msms/prot" + str(self.id) + ".pdb").next()
 
         mol.OBMol.AddHydrogens()
 
         pybelmol = pybel.Molecule(mol)
-        pybelmol.write("pdb", "/home/dan/solus/solus_design/PyRosetta/msms/prot" + str(self.id) + ".pdb",
+        pybelmol.write("pdb", self.path + "/msms/prot" + str(self.id) + ".pdb",
                        overwrite=True)
 
-        subprocess.call('cd ~/solus/solus_design/PyRosetta/msms; ./pdb_to_xyzrn prot' + str(self.id) +
+        subprocess.call('cd ' + self.path + '/msms; ./pdb_to_xyzrn prot' + str(self.id) +
                         '.pdb > prot' + str(self.id) + '.xyzrn', shell=True)
 
         check = []
 
-        with open("/home/dan/solus/solus_design/PyRosetta/msms/prot" + str(self.id) + ".xyzrn") as f:
+        with open(self.path + "/msms/prot" + str(self.id) + ".xyzrn") as f:
             check = f.readlines()
 
         atoms_check = []
@@ -168,11 +169,11 @@ class MonteCarlo:
 
             if not clash:
                 self.threshold = 0
-                subprocess.call('cd ~/solus/solus_design/PyRosetta/msms; ' +
+                subprocess.call('cd ' + self.path + '/msms; ' +
                                 './msms.x86_64Linux2.2.6.1 -if prot' + str(self.id) + '.xyzrn -af ses_atoms' +
                                 str(self.id) + ' > /dev/null', shell=True)
 
-                with open("/home/dan/solus/solus_design/PyRosetta/msms/ses_atoms" + str(self.id) + ".area") as f:
+                with open(self.path + "/msms/ses_atoms" + str(self.id) + ".area") as f:
                     atoms = f.readlines()
 
                 ses_type = []
@@ -234,7 +235,7 @@ class MonteCarlo:
                             pybelmol.write("pdb", "lowest_backup" + str(self.id) + ".pdb", overwrite=True)
 
         # For messing with dynamic parameter adjustment
-        
+
         # if self.threshold % 10 == 0:
         #     if self.mover_size > 1:
         #         self.mover_size -= 1
@@ -257,12 +258,12 @@ class MonteCarlo:
 
     def rebuild(self, id1, id2, it, conformation):
         """Rebuilds clashing residues.
-        :param id1: First residue id.
-        :param id2: Second residue id.
-        :param it: Number of iterations.
-        :param conformation: Current conformation.
-        :return: :type boolean: True if successfully rebuilt, False if not.
-        """
+-        :param id1: First residue id.
+-        :param id2: Second residue id.
+-        :param it: Number of iterations.
+-        :param conformation: Current conformation.
+-        :return: :type boolean: True if successfully rebuilt, False if not.
+-        """
         print "Adjusting rotamers..."
         new_rot1 = []
         new_rot2 = []
@@ -333,22 +334,22 @@ class MonteCarlo:
 
                 out = Bio.PDB.PDBIO()
                 out.set_structure(structure)
-                out.save("/home/dan/solus/solus_design/PyRosetta/msms/prot" + str(self.id) + ".pdb")
+                out.save(self.path + "/msms/prot" + str(self.id) + ".pdb")
 
-                mol = pybel.readfile("pdb", "/home/dan/solus/solus_design/PyRosetta/msms/prot" + str(self.id) + ".pdb").next()
+                mol = pybel.readfile("pdb", self.path + "/msms/prot" + str(self.id) + ".pdb").next()
 
                 mol.OBMol.AddHydrogens()
 
                 pybelmol = pybel.Molecule(mol)
-                pybelmol.write("pdb", "/home/dan/solus/solus_design/PyRosetta/msms/prot" + str(self.id) + ".pdb",
+                pybelmol.write("pdb", self.path + "/msms/prot" + str(self.id) + ".pdb",
                                overwrite=True)
 
-                subprocess.call('cd ~/solus/solus_design/PyRosetta/msms; ./pdb_to_xyzrn prot' + str(self.id) +
+                subprocess.call('cd ' + self.path + '/msms; ./pdb_to_xyzrn prot' + str(self.id) +
                                 '.pdb > prot' + str(self.id) + '.xyzrn', shell=True)
 
                 check = []
 
-                with open("/home/dan/solus/solus_design/PyRosetta/msms/prot" + str(self.id) + ".xyzrn") as f:
+                with open(self.path + "/msms/prot" + str(self.id) + ".xyzrn") as f:
                     check = f.readlines()
 
                 atoms_check = []
@@ -444,22 +445,22 @@ class MonteCarlo:
 
         out = Bio.PDB.PDBIO()
         out.set_structure(structure)
-        out.save("/home/dan/solus/solus_design/PyRosetta/msms/prot" + str(self.id) + ".pdb")
+        out.save(self.path + "/msms/prot" + str(self.id) + ".pdb")
 
-        mol = pybel.readfile("pdb", "/home/dan/solus/solus_design/PyRosetta/msms/prot" + str(self.id) + ".pdb").next()
+        mol = pybel.readfile("pdb", self.path + "/msms/prot" + str(self.id) + ".pdb").next()
 
         mol.OBMol.AddHydrogens()
 
         pybelmol = pybel.Molecule(mol)
-        pybelmol.write("pdb", "/home/dan/solus/solus_design/PyRosetta/msms/prot" + str(self.id) + ".pdb",
+        pybelmol.write("pdb", self.path + "/msms/prot" + str(self.id) + ".pdb",
                        overwrite=True)
 
-        subprocess.call('cd ~/solus/solus_design/PyRosetta/msms; ./pdb_to_xyzrn prot' + str(self.id) +
+        subprocess.call('cd ' + self.path + '/msms; ./pdb_to_xyzrn prot' + str(self.id) +
                         '.pdb > prot' + str(self.id) + '.xyzrn', shell=True)
 
         check = []
 
-        with open("/home/dan/solus/solus_design/PyRosetta/msms/prot" + str(self.id) + ".xyzrn") as f:
+        with open(self.path + "/msms/prot" + str(self.id) + ".xyzrn") as f:
             check = f.readlines()
 
         atoms_check = []
@@ -498,6 +499,7 @@ class MonteCarlo:
                     distance = np.sqrt((x2 - x)**2 + (y2 - y)**2 + (z2 - z)**2)
                     if distance < r + r2:
                         self.threshold += 1
+                        
         self.rot_conformation = self.rot_conf_local
         self.new_conf = True
         print "Success."
@@ -555,22 +557,22 @@ class MonteCarlo:
 
         out = Bio.PDB.PDBIO()
         out.set_structure(structure)
-        out.save("/home/dan/solus/solus_design/PyRosetta/msms/prot" + str(self.id) + ".pdb")
+        out.save(self.path + "/msms/prot" + str(self.id) + ".pdb")
 
-        mol = pybel.readfile("pdb", "/home/dan/solus/solus_design/PyRosetta/msms/prot" + str(self.id) + ".pdb").next()
+        mol = pybel.readfile("pdb", self.path + "/msms/prot" + str(self.id) + ".pdb").next()
 
         mol.OBMol.AddHydrogens()
 
         pybelmol = pybel.Molecule(mol)
-        pybelmol.write("pdb", "/home/dan/solus/solus_design/PyRosetta/msms/prot" + str(self.id) + ".pdb",
+        pybelmol.write("pdb", self.path + "/msms/prot" + str(self.id) + ".pdb",
                        overwrite=True)
 
-        subprocess.call('cd ~/solus/solus_design/PyRosetta/msms; ./pdb_to_xyzrn prot' + str(self.id) +
+        subprocess.call('cd ' + self.path + '/msms; ./pdb_to_xyzrn prot' + str(self.id) +
                         '.pdb > prot' + str(self.id) + '.xyzrn', shell=True)
 
         check = []
 
-        with open("/home/dan/solus/solus_design/PyRosetta/msms/prot" + str(self.id) + ".xyzrn") as f:
+        with open(self.path + "/msms/prot" + str(self.id) + ".xyzrn") as f:
             check = f.readlines()
 
         atoms_check = []
@@ -629,11 +631,11 @@ class MonteCarlo:
 
             if not clash:
                 self.threshold = 0
-                subprocess.call('cd ~/solus/solus_design/PyRosetta/msms; ' +
+                subprocess.call('cd ' + self.path + '/msms; ' +
                                 './msms.x86_64Linux2.2.6.1 -if prot' + str(self.id) + '.xyzrn -af ses_atoms' +
                                 str(self.id) + ' > /dev/null', shell=True)
 
-                with open("/home/dan/solus/solus_design/PyRosetta/msms/ses_atoms" + str(self.id) + ".area") as f:
+                with open(self.path + "/msms/ses_atoms" + str(self.id) + ".area") as f:
                     atoms = f.readlines()
 
                 ses_type = []
