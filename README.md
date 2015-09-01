@@ -22,3 +22,5 @@ e.g. if located at /home/msms give it /home.
 -Put Geometry.py from PeptideBuilder into the folder the pso/mc class is in.
 
 See the example script for how to use the classes. Pretty self-explanatory.
+
+Script for converting PDB to phi/psi is stolen from http://www.warwick.ac.uk/go/peter_cock/python/ramachandran/calculate/
