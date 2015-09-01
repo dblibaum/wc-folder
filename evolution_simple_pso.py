@@ -22,7 +22,7 @@ import random
 
 class Evolution:
 
-    def __init__(self, pdb, identifier=0):
+    def __init__(self, pdb, identifier=0, path=""):
         """ :param pdb: :type string: pdb ID of the protein to be folded.
         """
         self.gen_last = 0                                 # Stores generation for which energy score was last calculated
@@ -32,13 +32,14 @@ class Evolution:
         # This has ended up only using rosetta to get the sequence of the pdb file, which is of course not necessary
         rosetta.init()                                    # Initialize rosetta libraries
         pose_native = pose_from_rcsb(pdb)                 # Create rosetta pose of natively folded protein from pdb file
-        
+
         self.sequence = pose_native.sequence()            # Get sequence of protein
         self.id = identifier                              # Id of process
         self.rot_iter = 200                               # Number of iterations to try to resolve side chain clashes
         self.rot_mover_size = 5                           # Size of rotamer mover
         self.new_conf = False                             # Switch to build with new rotamer conformations
         self.mod_dict = {}                                # Dictionary of modified rotamers
+        self.path = path
 
         self.c_size = len(self.sequence)*2                     # Number of residues * 2 (phi and psi for each residue)
 
@@ -70,9 +71,9 @@ class Evolution:
             phobic_area = 0.0
             philic_area = 0.0
             e_score = 0.0
-
-            # Create PeptideBuilder structure for conformation
             
+            # Create PeptideBuilder structure for conformation
+
             geo = Geometry.geometry(self.sequence[0])
             geo.phi = conformation[0]
             geo.psi_im1 = conformation[1]
@@ -96,27 +97,28 @@ class Evolution:
 
             out = Bio.PDB.PDBIO()
             out.set_structure(structure)
-            out.save("/home/dan/solus/solus_design/PyRosetta/msms/prot" + str(self.id) + ".pdb")
-
+            out.save(self.path + "/msms/prot" + str(self.id) + ".pdb")
+            
             # Add hydrogens with pybel
 
-            mol = pybel.readfile("pdb", "/home/dan/solus/solus_design/PyRosetta/msms/prot" + str(self.id) + ".pdb").next()
+            mol = pybel.readfile("pdb", self.path + "/msms/prot" + str(self.id) + ".pdb").next()
 
             mol.OBMol.AddHydrogens()
 
             pybelmol = pybel.Molecule(mol)
-            pybelmol.write("pdb", "/home/dan/solus/solus_design/PyRosetta/msms/prot" + str(self.id) + ".pdb",
+            pybelmol.write("pdb", self.path + "/msms/prot" + str(self.id) + ".pdb",
                            overwrite=True)
-                           
+
             # Convert to xyzrn with msms executable
-            subprocess.call('cd ~/solus/solus_design/PyRosetta/msms; ./pdb_to_xyzrn prot' + str(self.id) +
+
+            subprocess.call('cd ' + self.path + '/msms; ./pdb_to_xyzrn prot' + str(self.id) +
                             '.pdb > prot' + str(self.id) + '.xyzrn', shell=True)
                             
             # Enforce constraints (atoms can't come closer than van-der-waals radii)
 
             check = []
 
-            with open("/home/dan/solus/solus_design/PyRosetta/msms/prot" + str(self.id) + ".xyzrn") as f:
+            with open(self.path + "/msms/prot" + str(self.id) + ".xyzrn") as f:
                 check = f.readlines()
 
             atoms_check = []
@@ -172,13 +174,13 @@ class Evolution:
                         break
 
                 if not clash:
-                
+                    
                     # Compute ses for all atoms with msms executable
-                    subprocess.call('cd ~/solus/solus_design/PyRosetta/msms; ' +
+                    subprocess.call('cd ' + self.path + '/msms; ' +
                                     './msms.x86_64Linux2.2.6.1 -if prot' + str(self.id) + '.xyzrn -af ses_atoms' +
                                     str(self.id) + ' > /dev/null', shell=True)
 
-                    with open("/home/dan/solus/solus_design/PyRosetta/msms/ses_atoms" + str(self.id) + ".area") as f:
+                    with open(self.path + "/msms/ses_atoms" + str(self.id) + ".area") as f:
                         atoms = f.readlines()
 
                     ses_type = []
@@ -205,6 +207,8 @@ class Evolution:
                     print "SPHOBE: " + str(phobic_area)
 
                     print "SPHIL: " + str(philic_area)
+
+                    # print "ES: " + str(e_score)
 
                     # Score the new conformation
                     score = surf_area/2 + phobic_area + philic_area
@@ -255,12 +259,9 @@ class Evolution:
             pybelmol.write("pdb", "lowest" + str(self.id) + ".pdb", overwrite=True)
             pybelmol.write("pdb", "lowest_backup" + str(self.id) + ".pdb", overwrite=True)
 
-        # Print lowest e_score in archive compared to native
-
         if scores[0][0] < self.lowest:
             self.lowest = scores[0][0]
 
-        # print "Lowest energy: " + str(scores[0][0]) + "\nNative energy: " + str(self.native_energy) + "\n"
         print "Lowest score: " + str(self.lowest)
 
         # return novelty_scores
@@ -344,22 +345,22 @@ class Evolution:
 
                 out = Bio.PDB.PDBIO()
                 out.set_structure(structure)
-                out.save("/home/dan/solus/solus_design/PyRosetta/msms/prot" + str(self.id) + ".pdb")
+                out.save(self.path + "/msms/prot" + str(self.id) + ".pdb")
 
-                mol = pybel.readfile("pdb", "/home/dan/solus/solus_design/PyRosetta/msms/prot" + str(self.id) + ".pdb").next()
+                mol = pybel.readfile("pdb", self.path + "/msms/prot" + str(self.id) + ".pdb").next()
 
                 mol.OBMol.AddHydrogens()
 
                 pybelmol = pybel.Molecule(mol)
-                pybelmol.write("pdb", "/home/dan/solus/solus_design/PyRosetta/msms/prot" + str(self.id) + ".pdb",
+                pybelmol.write("pdb", self.path + "/msms/prot" + str(self.id) + ".pdb",
                                overwrite=True)
 
-                subprocess.call('cd ~/solus/solus_design/PyRosetta/msms; ./pdb_to_xyzrn prot' + str(self.id) +
+                subprocess.call('cd ' + self.path + '/msms; ./pdb_to_xyzrn prot' + str(self.id) +
                                 '.pdb > prot' + str(self.id) + '.xyzrn', shell=True)
 
                 check = []
 
-                with open("/home/dan/solus/solus_design/PyRosetta/msms/prot" + str(self.id) + ".xyzrn") as f:
+                with open(self.path + "/msms/prot" + str(self.id) + ".xyzrn") as f:
                     check = f.readlines()
 
                 atoms_check = []
@@ -508,7 +509,7 @@ class Evolution:
         return seeds
 
     def evolve(self):
-        """ Run the evolution.
+        """ Run evolution.
         """
         pop_size = 100
 
@@ -520,7 +521,7 @@ class Evolution:
             seed.append(geo.phi)
             seed.append(geo.psi_im1)
 
-        template_seeds = self.create_seeds("/home/dan/solus/solus_design/PyRosetta/pdbs2")
+        template_seeds = self.create_seeds(self.path + "/pdbs2")
 
         seeds += template_seeds
 
